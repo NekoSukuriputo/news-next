@@ -2,41 +2,43 @@ import Link from "next/link";
 
 import NewsList from "@/components/news-list";
 import {
-  getNewsForYear,
-  getAvailableNewsYears,
-  getNewsForYearAndMonth,
   getAvailableNewsMonths,
+  getAvailableNewsYears,
+  getNewsForYear,
+  getNewsForYearAndMonth,
 } from "@/lib/news";
 
-export default function FilteredNewsPage({ params }) {
+export default async function FilteredNewsPage({ params }) {
   const filter = params.filter;
 
-  const seletedYear = filter?.[0];
-  const seletedMonth = filter?.[1];
+  const selectedYear = filter?.[0];
+  const selectedMonth = filter?.[1];
 
   let news;
-  let links = getAvailableNewsYears();
+  let links = await getAvailableNewsYears();
 
-  if (seletedYear && !seletedMonth) {
-    news = getNewsForYear(seletedYear);
-    links = getAvailableNewsMonths(seletedYear);
+  if (selectedYear && !selectedMonth) {
+    news = await getNewsForYear(selectedYear);
+    links = getAvailableNewsMonths(selectedYear);
   }
 
-  if (seletedYear && seletedMonth) {
-    news = getNewsForYearAndMonth(seletedYear, seletedMonth);
+  if (selectedYear && selectedMonth) {
+    news = await getNewsForYearAndMonth(selectedYear, selectedMonth);
     links = [];
   }
 
-  let newContent = <p>No news found for the selected period.</p>;
+  let newsContent = <p>No news found for the selected period.</p>;
 
   if (news && news.length > 0) {
-    newContent = <NewsList news={news} />;
+    newsContent = <NewsList news={news} />;
   }
 
+  const availableYears = await getAvailableNewsYears();
+
   if (
-    (seletedYear && !getAvailableNewsYears().includes(+seletedYear)) ||
-    (seletedMonth &&
-      !getAvailableNewsMonths(seletedYear).includes(+seletedMonth))
+    (selectedYear && !availableYears.includes(selectedYear)) ||
+    (selectedMonth &&
+      !getAvailableNewsMonths(selectedYear).includes(selectedMonth))
   ) {
     throw new Error("Invalid filter.");
   }
@@ -47,8 +49,8 @@ export default function FilteredNewsPage({ params }) {
         <nav>
           <ul>
             {links.map((link) => {
-              const href = seletedYear
-                ? `/archive/${seletedYear}/${link}`
+              const href = selectedYear
+                ? `/archive/${selectedYear}/${link}`
                 : `/archive/${link}`;
 
               return (
@@ -60,7 +62,7 @@ export default function FilteredNewsPage({ params }) {
           </ul>
         </nav>
       </header>
-      {newContent}
+      {newsContent}
     </>
   );
 }
